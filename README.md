@@ -49,6 +49,6 @@ then use this code to benchmark and plot the points:
 ```
 
 
-as you can see it makes a pretty graph with not too much noise! (see vec_pop.png in this repo)
+as you can see it makes a pretty graph with not too much noise! ![alt text](https://gitlab.com/matthewashton_k/closure-runtime-plotter/-/raw/master/vec_pop.png?ref_type=heads&inline=false)
 
 
