@@ -35,13 +35,33 @@ fn main() {
         }
         return djs;
     };
-
     // this closure adds unions between two lists of length n containing random indexes
     // as you can see, a mutable disjointset is passed into this closure.
     // that disjointset is created by the eval_before closure
     let djs_union = |n:u128, mut djs: DisjointSetHashMap<u128>| {
         black_box(djs.union(thread_rng().gen_range(0..n), thread_rng().gen_range(0..n)));
     };
+
+
+    let eval_before_vec = |n: u128| -> Vec<u128> {
+        let mut vec_of_len_n = Vec::new();
+        for i in 0..n {
+            vec_of_len_n.push(i);
+        }
+        return vec_of_len_n;
+    };
+
+    let benchmark_pop =  |n:u128, mut vector: Vec<u128>| {
+        for i in 0..n {
+            black_box(vector.pop());
+        }
+    };
+
+    let mut speedtest_vec_pop = SpeedTest::new(benchmark_pop);
+    speedtest_vec_pop.test_speed(10000,1000,100,1000, eval_before_vec);
+    let plotter = plotter::Plotter::new(speedtest_vec_pop.get_plot());
+    plotter.generate_image("vec_pop.png");
+    println!("finished plotting vector pop runtimes");
 
     // create new speedtest struct and pass it the closure to execute
     let mut speedtester_bigo_n = SpeedTest::new(
@@ -54,5 +74,9 @@ fn main() {
     // generates a plot of the image and saves it to a png
     let plotter = plotter::Plotter::new(speedtester_bigo_n.get_plot());
     let generated = plotter.generate_image("djs.png");
+
+
+
+
 
 }
