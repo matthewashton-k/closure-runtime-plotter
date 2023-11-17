@@ -24,14 +24,14 @@ fn main() {
         let mut elements = vec![];
         // populate the disjointset with random numbers
         for i in 0..n {
-            let r = rand::random::<u128>();
+            let r = thread_rng().gen_range(0..n);
             djs.make_set(r);
             elements.push(r);
         }
         let mut rng = thread_rng();
 
         // create random unions between items in the disjoint set
-        for i in 0..n/2 {
+        for i in 0..n/3 {
             djs.union(*elements.get(rng.gen_range(0..elements.len())).unwrap(), *elements.get(rng.gen_range(0..elements.len())).unwrap());
         }
         return djs;
@@ -56,22 +56,22 @@ fn main() {
             black_box(vector.get(&format!("index{}",n-100)));
     };
 
-    let mut hashmap_get = SpeedTest::new(benchmark_get);
-    hashmap_get.test_speed(100, 100, 100, 5000000, eval_before_hash_get);
-    let plotter = plotter::Plotter::new(hashmap_get.get_plot());
-    plotter.generate_image("hash_get.png");
-    println!("finished plotting hashmap get runtimes");
+    // let mut hashmap_get = SpeedTest::new(benchmark_get);
+    // hashmap_get.test_speed(100, 100, 100, 5000000, eval_before_hash_get);
+    // let plotter = plotter::Plotter::new(hashmap_get.get_plot());
+    // plotter.generate_image("hash_get.png");
+    // println!("finished plotting hashmap get runtimes");
 
     // create new speedtest struct and pass it the closure to execute
-    let mut speedtester_bigo_n = SpeedTest::new(
+    let mut djs_union_benchmark = SpeedTest::new(
         djs_union
     );
 
     // test the speed
-    speedtester_bigo_n.test_speed(1000,10000,100, 1000,eval_before);
-
-    // generates a plot of the image and saves it to a png
-    let plotter = plotter::Plotter::new(speedtester_bigo_n.get_plot());
+    djs_union_benchmark.test_speed(100, 5000, 200, 600, eval_before);
+    djs_union_benchmark.apply_moving_average(10);
+    // generates a plot of the image and saves it  to a png
+    let plotter = plotter::Plotter::new(djs_union_benchmark.get_plot());
     let generated = plotter.generate_image("djs.png");
 
 

@@ -52,6 +52,15 @@ impl<U: Clone, T: FnMut(u128, &mut U) +Copy> SpeedTest<U, T> {
         }
         println!("{}",self.to_string());
     }
+    pub fn apply_moving_average(&mut self, window_size: usize) {
+        self.plot = self.plot.windows(window_size)
+            .map(|window| {
+                let sum: u128 = window.iter().map(|&(_, y)| y).sum();
+                let avg = sum / window_size as u128;
+                (window[0].0, avg)
+            })
+            .collect();
+    }
     fn to_string(&self) -> String {
         let mut returnme = String::new();
         for p in &self.plot {
