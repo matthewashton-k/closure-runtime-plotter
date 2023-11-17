@@ -57,7 +57,7 @@ fn main() {
     };
 
     let mut hashmap_get = SpeedTest::new(benchmark_get);
-    hashmap_get.test_speed(100, 1000, 100, 5000000, eval_before_hash_get);
+    hashmap_get.test_speed(100, 100, 100, 5000000, eval_before_hash_get);
     let plotter = plotter::Plotter::new(hashmap_get.get_plot());
     plotter.generate_image("vec_pop.png");
     println!("finished plotting vector pop runtimes");
