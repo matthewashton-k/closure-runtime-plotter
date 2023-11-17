@@ -2,6 +2,7 @@ mod plotter;
 mod speedtest;
 mod disjointset;
 
+use std::collections::HashMap;
 use std::hint::black_box;
 use std::thread;
 use std::thread::sleep;
@@ -38,28 +39,26 @@ fn main() {
     // this closure adds unions between two lists of length n containing random indexes
     // as you can see, a mutable disjointset is passed into this closure.
     // that disjointset is created by the eval_before closure
-    let djs_union = |n:u128, mut djs: DisjointSetHashMap<u128>| {
+    let djs_union = |n:u128, djs: &mut DisjointSetHashMap<u128>| {
         black_box(djs.union(thread_rng().gen_range(0..n), thread_rng().gen_range(0..n)));
     };
 
 
-    let eval_before_vec = |n: u128| -> Vec<u128> {
-        let mut vec_of_len_n = Vec::new();
+    let eval_before_hash_get = |n: u128| -> HashMap<String,u128> {
+        let mut hashmap = HashMap::new();
         for i in 0..n {
-            vec_of_len_n.push(i);
+            hashmap.insert(format!("index{}",i),i);
         }
-        return vec_of_len_n;
+        return hashmap;
     };
 
-    let benchmark_pop =  |n:u128, mut vector: Vec<u128>| {
-        for i in 0..n {
-            black_box(vector.pop());
-        }
+    let benchmark_get =  |n:u128, vector: &mut HashMap<String,u128>| {
+            black_box(vector.get(&format!("index{}",n-100)));
     };
 
-    let mut speedtest_vec_pop = SpeedTest::new(benchmark_pop);
-    speedtest_vec_pop.test_speed(10000,1000,100,1000, eval_before_vec);
-    let plotter = plotter::Plotter::new(speedtest_vec_pop.get_plot());
+    let mut hashmap_get = SpeedTest::new(benchmark_get);
+    hashmap_get.test_speed(100, 1000, 100, 5000000, eval_before_hash_get);
+    let plotter = plotter::Plotter::new(hashmap_get.get_plot());
     plotter.generate_image("vec_pop.png");
     println!("finished plotting vector pop runtimes");
 
@@ -69,14 +68,11 @@ fn main() {
     );
 
     // test the speed
-    speedtester_bigo_n.test_speed(1000,1000,100, 1000,eval_before);
+    speedtester_bigo_n.test_speed(1000,10000,100, 1000,eval_before);
 
     // generates a plot of the image and saves it to a png
     let plotter = plotter::Plotter::new(speedtester_bigo_n.get_plot());
     let generated = plotter.generate_image("djs.png");
-
-
-
 
 
 }
