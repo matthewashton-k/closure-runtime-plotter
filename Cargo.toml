@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.68"
-image = "0.24.5"
-imageproc = "0.23.0"
 rand = "0.8.5"
+rerun = "0.22.1"
 rusttype = "0.9.3"

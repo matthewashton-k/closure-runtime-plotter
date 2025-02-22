@@ -1,20 +1,17 @@
-mod plotter;
-mod speedtest;
 mod disjointset;
+mod speedtest;
 
+use crate::disjointset::DisjointSetHashMap;
+use rand::{random, thread_rng, Rng};
+use speedtest::SpeedTest;
 use std::collections::HashMap;
 use std::hint::black_box;
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
-use rand::{random, Rng, thread_rng};
-use speedtest::SpeedTest;
-use crate::disjointset::DisjointSetHashMap;
 
-fn main() {
-
-    // this is supposed to make sure the thread is all spun up before benchmarking
-    sleep(Duration::from_secs(1));
+fn main() -> anyhow::Result<()> {
+    let rec = rerun::RecordingStreamBuilder::new("rerun_example_app").connect_tcp()?;    
 
     // eval_before is meant to be ran before the closure that needs to be benchmarked, it is used to create data structures that are needed for the actual benchmark
     // you dont want to benchmark the overhead of creating the object and adding random values, etc so any setup you have to do before benchmarking is done in this closure
@@ -43,36 +40,14 @@ fn main() {
         black_box(djs.union(thread_rng().gen_range(0..n), thread_rng().gen_range(0..n)));
     };
 
-
-    let eval_before_hash_get = |n: u128| -> HashMap<String,u128> {
-        let mut hashmap = HashMap::new();
-        for i in 0..n {
-            hashmap.insert(format!("index{}",i),i);
-        }
-        return hashmap;
-    };
-
-    let benchmark_get =  |n:u128, vector: &mut HashMap<String,u128>| {
-            black_box(vector.get(&format!("index{}",n-100)));
-    };
-
-    // let mut hashmap_get = SpeedTest::new(benchmark_get);
-    // hashmap_get.test_speed(100, 100, 100, 5000000, eval_before_hash_get);
-    // let plotter = plotter::Plotter::new(hashmap_get.get_plot());
-    // plotter.generate_image("hash_get.png");
-    // println!("finished plotting hashmap get runtimes");
-
     // create new speedtest struct and pass it the closure to execute
     let mut djs_union_benchmark = SpeedTest::new(
-        djs_union
+        djs_union,
+        rec
     );
-
+    djs_union_benchmark.apply_moving_average(20);
     // test the speed
-    djs_union_benchmark.test_speed(100, 5000, 200, 600, eval_before);
-    djs_union_benchmark.apply_moving_average(10);
-    // generates a plot of the image and saves it  to a png
-    let plotter = plotter::Plotter::new(djs_union_benchmark.get_plot());
-    let generated = plotter.generate_image("djs.png");
-
-
+    djs_union_benchmark.test_speed(2000, 100, 1000, 5000, eval_before);
+     
+    Ok(())
 }
