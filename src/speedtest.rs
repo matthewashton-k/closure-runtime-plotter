@@ -1,6 +1,7 @@
 use std::fmt::format;
 use std::time::Instant;
 use anyhow::Error;
+use rerun::{Position2D, BarChart};
 use std::hint::black_box;
 use std::marker::PhantomData;
 use std::mem::transmute;
@@ -8,14 +9,16 @@ use std::mem::transmute;
 pub struct SpeedTest<U: Clone, T: FnMut(u128, &mut U)+Copy> {
     execute: T,
     plot: Vec<(u128, u128)>,
-    _marker: PhantomData<U>
+    _marker: PhantomData<U>,
+    rec: rerun::RecordingStream
 }
 impl<U: Clone, T: FnMut(u128, &mut U) +Copy> SpeedTest<U, T> {
-    pub fn new(execute: T) -> Self {
+    pub fn new(execute: T, rec: rerun::RecordingStream) -> Self {
         Self{
             execute,
             plot: vec![],
-            _marker: PhantomData
+            _marker: PhantomData,
+            rec
         }
     }
 
@@ -32,6 +35,7 @@ impl<U: Clone, T: FnMut(u128, &mut U) +Copy> SpeedTest<U, T> {
     /// for example, if you want to test the time complexity of removing elements from a vector, you can use eval_before to create a vector of n size, then that vector is passed into self.execute, where you can call pop() n different times
     pub fn test_speed<V: FnMut(u128) -> U>(&mut self, nstart: u128, nincrements: u128, iterations: u128, noise_reduction: u128, mut eval_before: V){
         self.plot.clear();
+        self.rec.log("barchart", &BarChart::new([0.0,0.0].as_slice()));
         for i in 0..iterations {
             // execute eval_before to get an object
             let mut pre_time_val = eval_before(nstart+(i*nincrements));
@@ -44,8 +48,12 @@ impl<U: Clone, T: FnMut(u128, &mut U) +Copy> SpeedTest<U, T> {
             };
 
             let end = start_time.elapsed().as_nanos();
-            self.plot.push((nstart+(i*nincrements),((end))/noise_reduction));
-
+            let (x,y)= (nstart+(i*nincrements),((end))/noise_reduction);
+            self.plot.push((x,y));
+            let plot= self.plot.iter().map(|(x,y)| {
+                *y as f64
+            }).collect::<Vec<f64>>();
+            self.rec.log("barchart", &BarChart::update_fields().with_values(plot.as_slice()));
             // I included a println because its nice to see the progress of the run
             println!("{}\t{}",nstart+(i*nincrements),((end))/noise_reduction);
 
