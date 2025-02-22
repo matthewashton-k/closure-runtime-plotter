@@ -12,7 +12,8 @@ use std::thread::sleep;
 use std::time::Duration;
 
 fn main() -> anyhow::Result<()> {
-    let rec = rerun::RecordingStreamBuilder::new("rerun_example_app").connect_tcp()?;
+    let rec = rerun::RecordingStreamBuilder::new("rerun_example_app").connect_tcp()?;    
+    
     let eval_before = |n| -> u128 {0};
     let quadratic = |n, before: &mut u128| {
         for i in 0..n {
@@ -23,6 +24,6 @@ fn main() -> anyhow::Result<()> {
     };
     let mut bench = SpeedTest::new(quadratic, rec);
     // test the speed
-    bench.test_speed(100, 10, 100, 600, eval_before);
+    bench.test_speed(10, 1, 300, 600, eval_before);
     Ok(())
 }
